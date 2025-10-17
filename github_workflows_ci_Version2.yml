@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Generate synthetic data
+        run: |
+          python data/generate_synthetic_data.py --out data/train.csv --n-stores 2 --n-products 3 --periods 90
+      - name: Train model (smoke)
+        run: |
+          python src/train.py --data-path data/train.csv --model random_forest --output-dir models
+      - name: Run tests
+        run: |
+          pytest -q
